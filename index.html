@@ -306,77 +306,82 @@
   <div id="bench">
     <h2><a class="anchor" href="#bench">Benchmarks</a></h2>
     <p class="small">
-      Mean wall time. 75 warm runs after 5 warmup runs, and 15 cold runs, with OS cache dropped before each.
+      Mean wall time. 75 warm runs after 5 warmup runs, and 10 cold runs, with OS cache dropped before each.
     </p>
     <p class="small">
       <em>Tool cache</em> is each tool's own persistent cache. For rawgrep it is the Fragment Cache,
       for fff it is its LMDB frecency scoring.
       ripgrep has no persistent cache, so its two rows per cache state are just repeat runs.
     </p>
+    <p class="small" style="font-size:13px; font-style:italic;">
+      For rawgrep, <em>Tool cache</em> off (<code>--no-cache</code>) disables only the Fragment Cache.
+      The Directory Snapshot and Binary Verdicts caches stay on, since they are part of how rawgrep
+      stands in for the general-purpose caches of the kernel.
+    </p>
 
     <h3 id="wall-time-in-milliseconds"><a class="anchor" href="#wall-time-in-milliseconds">Wall time, in milliseconds</a></h3>
     <div class="frame"><table class="bench" id="wall">
 <tr><th class="lab">OS cache</th><th class="lab">Tool cache</th><th>rawgrep</th><th>fff</th><th>ripgrep</th></tr>
 <tr class="grp"><td colspan="5">Chromium (~500k files), pattern: <span class="pat">TODO</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(65,99,72);color:#fff" title="2.57x ahead of runner-up">67.4</td><td>173.1</td><td>345.9</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(123,148,126);color:#fff" title="1.38x ahead of runner-up">218.3</td><td>301.5</td><td>346.3</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(159,178,158);color:#101a13" title="1.17x ahead of runner-up">8558.4</td><td>10004.1</td><td>11890.0</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(206,217,201);color:#101a13" title="1.03x ahead of runner-up">1545.7</td><td>1590.2</td><td>11950.1</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(65,99,72);color:#fff" title="2.55x ahead of runner-up">67.5</td><td>171.9</td><td>348.4</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(123,148,126);color:#fff" title="1.43x ahead of runner-up">210.0</td><td>300.5</td><td>347.2</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(147,168,147);color:#101a13" title="1.25x ahead of runner-up">7979.6</td><td>9981.4</td><td>11836.8</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(229,237,223);color:#101a13" title="1.03x ahead of runner-up">1460.9</td><td>1497.5</td><td>11808.2</td></tr>
 <tr class="grp"><td colspan="5">Chromium (~500k files), pattern: <span class="pat">(?i)\bTODO\((?:crbug\.com/\d+|[a-zA-Z][\w.-]*)\)</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(88,119,93);color:#fff" title="2.41x ahead of runner-up">57.2</td><td>137.7</td><td>356.2</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(112,138,115);color:#fff" title="1.51x ahead of runner-up">221.5</td><td>333.9</td><td>357.3</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(147,168,147);color:#101a13" title="1.18x ahead of runner-up">8564.3</td><td>10087.2</td><td>11887.8</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>1213.8</td><td class="best" style="background:rgb(100,128,104);color:#fff" title="2.19x ahead of runner-up">553.0</td><td>11903.3</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(88,119,93);color:#fff" title="2.50x ahead of runner-up">56.3</td><td>140.6</td><td>357.9</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(112,138,115);color:#fff" title="1.56x ahead of runner-up">212.7</td><td>332.5</td><td>358.5</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(159,178,158);color:#101a13" title="1.25x ahead of runner-up">8039.0</td><td>10024.5</td><td>11951.7</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>1142.8</td><td class="best" style="background:rgb(100,128,104);color:#fff" title="2.37x ahead of runner-up">481.8</td><td>11859.8</td></tr>
 <tr class="grp"><td colspan="5">Linux (~100k files), pattern: <span class="pat">TODO</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(53,89,61);color:#fff" title="3.51x ahead of runner-up">20.2</td><td>70.9</td><td>109.0</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(229,237,223);color:#101a13" title="1.01x ahead of runner-up">107.9</td><td>111.2</td><td>109.3</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(170,188,169);color:#101a13" title="1.07x ahead of runner-up">3092.7</td><td>3296.9</td><td>3720.7</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>332.7</td><td class="best" style="background:rgb(194,207,191);color:#101a13" title="1.05x ahead of runner-up">318.2</td><td>3814.5</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(53,89,61);color:#fff" title="3.51x ahead of runner-up">20.1</td><td>70.6</td><td>109.3</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(206,217,201);color:#101a13" title="1.03x ahead of runner-up">106.4</td><td>110.4</td><td>109.4</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(194,207,191);color:#101a13" title="1.06x ahead of runner-up">3085.3</td><td>3270.8</td><td>3726.9</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>302.4</td><td class="best" style="background:rgb(170,188,169);color:#101a13" title="1.08x ahead of runner-up">281.3</td><td>3718.1</td></tr>
 <tr class="grp"><td colspan="5">Linux (~100k files), pattern: <span class="pat">[A-Z]+_SUSPEND</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(76,109,83);color:#fff" title="2.45x ahead of runner-up">28.2</td><td>69.1</td><td>109.5</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>118.8</td><td>111.5</td><td class="best" style="background:rgb(217,227,212);color:#101a13" title="1.01x ahead of runner-up">109.9</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(182,198,180);color:#101a13" title="1.06x ahead of runner-up">3138.5</td><td>3328.3</td><td>3702.5</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>355.6</td><td class="best" style="background:rgb(135,158,137);color:#fff" title="1.29x ahead of runner-up">275.3</td><td>3742.1</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(76,109,83);color:#fff" title="2.51x ahead of runner-up">27.7</td><td>69.4</td><td>109.6</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>116.8</td><td>112.5</td><td class="best" style="background:rgb(217,227,212);color:#101a13" title="1.03x ahead of runner-up">109.7</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(182,198,180);color:#101a13" title="1.07x ahead of runner-up">3072.7</td><td>3278.7</td><td>3728.5</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>339.8</td><td class="best" style="background:rgb(135,158,137);color:#fff" title="1.41x ahead of runner-up">241.6</td><td>3732.1</td></tr>
 </table></div>
 
     <h3 id="peak-resident-set-size-rss-in-mib"><a class="anchor" href="#peak-resident-set-size-rss-in-mib">Peak Resident Set Size (RSS), in MiB</a></h3>
     <div class="frame"><table class="bench" id="mem">
 <tr><th class="lab">OS cache</th><th class="lab">Tool cache</th><th>rawgrep</th><th>ripgrep</th></tr>
 <tr class="grp"><td colspan="4">Chromium (~500k files), pattern: <span class="pat">TODO</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(159,178,158);color:#101a13" title="1.32x ahead of runner-up">64.6</td><td>85.4</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(182,198,180);color:#101a13" title="1.27x ahead of runner-up">67.1</td><td>85.4</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(170,188,169);color:#101a13" title="1.31x ahead of runner-up">60.6</td><td>79.3</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(147,168,147);color:#101a13" title="1.36x ahead of runner-up">58.4</td><td>79.3</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(170,188,169);color:#101a13" title="1.26x ahead of runner-up">65.7</td><td>82.5</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(217,227,212);color:#101a13" title="1.07x ahead of runner-up">77.2</td><td>82.5</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(206,217,201);color:#101a13" title="1.10x ahead of runner-up">68.7</td><td>75.4</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(159,178,158);color:#101a13" title="1.30x ahead of runner-up">58.2</td><td>75.4</td></tr>
 <tr class="grp"><td colspan="4">Chromium (~500k files), pattern: <span class="pat">(?i)\bTODO\((?:crbug\.com/\d+|[a-zA-Z][\w.-]*)\)</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(194,207,191);color:#101a13" title="1.27x ahead of runner-up">63.9</td><td>81.1</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(217,227,212);color:#101a13" title="1.14x ahead of runner-up">70.9</td><td>81.1</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td class="best" style="background:rgb(229,237,223);color:#101a13" title="1.12x ahead of runner-up">66.2</td><td>74.2</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(206,217,201);color:#101a13" title="1.23x ahead of runner-up">60.2</td><td>74.2</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td class="best" style="background:rgb(147,168,147);color:#101a13" title="1.39x ahead of runner-up">64.0</td><td>88.7</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td class="best" style="background:rgb(194,207,191);color:#101a13" title="1.10x ahead of runner-up">80.7</td><td>88.7</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td>78.2</td><td class="best" style="background:rgb(229,237,223);color:#101a13" title="1.07x ahead of runner-up">73.2</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td class="best" style="background:rgb(182,198,180);color:#101a13" title="1.22x ahead of runner-up">60.1</td><td>73.2</td></tr>
 <tr class="grp"><td colspan="4">Linux (~100k files), pattern: <span class="pat">TODO</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td>33.6</td><td class="best" style="background:rgb(76,109,83);color:#fff" title="2.92x ahead of runner-up">11.5</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>30.8</td><td class="best" style="background:rgb(123,148,126);color:#fff" title="2.68x ahead of runner-up">11.5</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td>29.7</td><td class="best" style="background:rgb(135,158,137);color:#fff" title="2.52x ahead of runner-up">11.8</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>33.7</td><td class="best" style="background:rgb(88,119,93);color:#fff" title="2.86x ahead of runner-up">11.8</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td>33.1</td><td class="best" style="background:rgb(100,128,104);color:#fff" title="2.88x ahead of runner-up">11.5</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>32.3</td><td class="best" style="background:rgb(123,148,126);color:#fff" title="2.81x ahead of runner-up">11.5</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td>31.6</td><td class="best" style="background:rgb(135,158,137);color:#fff" title="2.72x ahead of runner-up">11.6</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>34.0</td><td class="best" style="background:rgb(88,119,93);color:#fff" title="2.93x ahead of runner-up">11.6</td></tr>
 <tr class="grp"><td colspan="4">Linux (~100k files), pattern: <span class="pat">[A-Z]+_SUSPEND</span></td></tr>
-<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td>37.8</td><td class="best" style="background:rgb(65,99,72);color:#fff" title="3.18x ahead of runner-up">11.9</td></tr>
-<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>33.8</td><td class="best" style="background:rgb(100,128,104);color:#fff" title="2.84x ahead of runner-up">11.9</td></tr>
-<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td>33.7</td><td class="best" style="background:rgb(112,138,115);color:#fff" title="2.83x ahead of runner-up">11.9</td></tr>
-<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>37.9</td><td class="best" style="background:rgb(53,89,61);color:#fff" title="3.18x ahead of runner-up">11.9</td></tr>
+<tr class="s0"><td class="lab">warm</td><td class="lab">on</td><td>36.9</td><td class="best" style="background:rgb(65,99,72);color:#fff" title="3.15x ahead of runner-up">11.7</td></tr>
+<tr class="s1"><td class="lab">warm</td><td class="lab">off</td><td>36.6</td><td class="best" style="background:rgb(76,109,83);color:#fff" title="3.13x ahead of runner-up">11.7</td></tr>
+<tr class="s2"><td class="lab">cold</td><td class="lab">off</td><td>34.0</td><td class="best" style="background:rgb(112,138,115);color:#fff" title="2.86x ahead of runner-up">11.9</td></tr>
+<tr class="s3"><td class="lab">cold</td><td class="lab">on</td><td>38.5</td><td class="best" style="background:rgb(53,89,61);color:#fff" title="3.24x ahead of runner-up">11.9</td></tr>
 </table></div>
 
     <p>
-      <strong>rawgrep won 12 of the 16 scenarios</strong>. With warm OS cache and the Fragment Cache on, it is
-      2.4× to 3.5× faster than fff and 3.9× to 6.2× faster than ripgrep. With cold OS cache and the Fragment Cache
-      off, rawgrep’s lead over fff shrinks to 1.06× to 1.18×.
+      <strong>rawgrep won 13 of the 16 scenarios</strong>. With warm OS cache and the Fragment Cache on, it is
+      2.5× to 3.5× faster than fff and 4.0× to 6.4× faster than ripgrep. With cold OS cache and the Fragment Cache
+      off, rawgrep’s lead over fff shrinks to 1.06× to 1.25×.
     </p>
     <p>
-      Of the four losses, three are to fff (cold OS cache, Fragment Cache on), by 1.05× to 2.2×. That is expected, since
-      fff relies on much heavier caching (see <a href="#design">Design</a>). The fourth is to ripgrep on the
+      Of the three losses, two are to fff (cold OS cache, <em>Tool cache</em> on), by 1.08× to 2.37×. That is to be expected, since
+      fff relies on much heavier caching (see <a href="#design">Design</a>). The third one is to ripgrep on the
       Linux regex pattern (warm OS cache, Fragment Cache off), by under 10 ms. rawgrep will likely win this one too
       in a future patch...
     </p>
     <p>
-      On memory, rawgrep uses 11% to 26% less than ripgrep on the Chromium tree, but 152% to 218% more on the
+      On memory, rawgrep uses 6% to 28% less than ripgrep on the Chromium tree, but 172% to 224% more on the
       Linux tree, though its peak never exceeds 40 MiB. fff’s peak RSS is not in the table, since nearly all of it lives in the
       long-running fff[d] process, not the benchmarked fff[q] client. On the Chromium corpus, fff[d] sits at about 250 MB
       after indexing and climbs to 2.43 GB during search, where it stays, even when idle. Although, I should add that <a href="https://github.com/rakivo/fff-grep">fff-grep</a>
@@ -404,7 +409,7 @@
         <tr><td class="k">IO</td><td>scheduler [none] mq-deadline, read-ahead 128 KB, queue depth 1023</td></tr>
         <tr><td class="k">PCIe link</td><td>8.0 GT/s PCIe x4 (max 8.0 GT/s PCIe x4)</td></tr>
         <tr><td class="k">Data</td><td>../chromium on /dev/nvme0n1p2<br>../linux on /dev/nvme0n1p2</td></tr>
-        <tr><td class="k">rawgrep</td><td>0.3.0 (rev 4b9d579) 14 October 2026, 00:19:09</td></tr>
+        <tr><td class="k">rawgrep</td><td>0.3.0 (rev 814e766) 14 October 2026, 19:33:42</td></tr>
         <tr><td class="k">ripgrep</td><td>15.2.0 (rev 3fce3b5bb0)</td></tr>
         <tr><td class="k">fff</td><td>1.0.0 (fff_search 0.11.0) the CLI version used, is available at <a href="https://github.com/rakivo/fff-grep">rakivo/fff-grep</a></td></tr>
         <tr><td class="k">hyperfine</td><td>2.0.0</td></tr>
