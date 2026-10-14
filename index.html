@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rawgrep</title>
+<style>
+  body {
+    margin: 0;
+    padding: 18px 8px 30px 8px;
+    background-color: #eef1ec;
+    color: #26332a;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  a { color: #2f6b45; text-decoration: none; font-weight: 550; }
+  a:hover { background: #dbe8d4; text-decoration: underline; }
+
+  #page {
+    --pad: 26px;
+    max-width: 760px;
+    margin: 0 auto;
+    background: #fbfcf9;
+    border: 1px solid #c5d1c0;
+    padding: 18px var(--pad) 22px var(--pad);
+  }
+
+  .title { text-align: center; }
+  h1 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 90px;
+    line-height: 1.05;
+    letter-spacing: 1px;
+    padding: 27px;
+    color: #fff;
+    /* thin green outline: a 4px stroke painted under the fill leaves about 2px showing */
+    -webkit-text-stroke: 4px #2f5d3a;
+    paint-order: stroke fill;
+  }
+  .tag {
+      margin: 14px 0 0 0;
+      color: #5d6f62;
+      font-style: italic;
+  }
+  /* position + z-index lift the links above the garland, which is pulled up under them by a negative margin */
+  .nav { margin: 10px 0 0 0; font-size: 13px; text-align: center; position: relative; z-index: 1; }
+  h2 {
+    margin: 0 0 -10px 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 35px;
+    color: #2f5d3a;
+  }
+  h3 { margin: 14px 0 4px 0; font-size: 14px; color: #3d5a45; }
+  /* Benchmarks subheadings (Wall time, Peak RSS, System information): same Georgia as the Usage subheadings.
+  Georgia has no weight between regular and bold, so a thin text stroke gives the "a bit bolder" look */
+  #bench h3 { font-family: Georgia, "Times New Roman", serif; font-size: 17px; font-weight: normal; -webkit-text-stroke: 0.4px currentColor; }
+  /* "Wall time" sits right under a paragraph whose 14px bottom margin collapses with the heading's top margin,
+  so shrinking the heading's own margin can't help; a negative one pulls it up: 14px - 4px = 10px */
+  #bench h3:nth-of-type(1) { margin-top: -4px; }
+  /* "Peak RSS": a bit more room above it than the default 14px */
+  #bench h3:nth-of-type(2) { margin-top: 24px; }
+
+  /* Usage subheadings (Permissions, Going further): Georgia, a notch bigger since it reads small next to Verdana */
+  /* the negative bottom margin cancels part of the paragraph's 14px top margin, as with h2 and the feature titles:
+  the gap under the heading is 14px - 6px = 8px */
+  /* Georgia has no weight between regular and bold, so a thin text stroke gives the "a bit bolder" look, same as the Benchmarks subheadings */
+  #usage h3 { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: 21px; font-weight: normal; -webkit-text-stroke: 0.4px currentColor; margin-bottom: -6px; }
+
+  /* feature titles: same face and color as h2, a step smaller */
+  h3.feature {
+    margin: 16px 0 -6px 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 24px;
+    color: #2f5d3a;
+  }
+  /* design, feature, benchmark and usage text: serif to match the titles; Georgia reads small next to Verdana, so a notch bigger */
+  #design p, #features p, #bench > p, #usage > p {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+  }
+
+  /* collapsible "detail": the Stale Pages Detector is more of an interesting detail than a feature,
+     so its title is dimmed and its text is folded away until clicked */
+  details.detail > summary {
+    margin: 16px 0 0 0;
+    cursor: pointer;
+    list-style: none;
+  }
+  details.detail > summary::-webkit-details-marker { display: none; }
+  /* two states: dimmed and a touch bolder while folded, the normal feature title once opened.
+     Georgia has no in-between weight, so a hairline text stroke does the "touch bolder" */
+  details.detail > summary h3.feature {
+    display: inline;
+    margin: 0;
+    color: #7f8d82;
+    -webkit-text-stroke: 0.6px currentColor;
+    /* almost invisible underline: same color as the title, low opacity */
+    text-decoration: underline;
+    text-decoration-color: rgba(127, 141, 130, 0.21);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 7px;
+  }
+  details.detail[open] > summary h3.feature {
+    color: #2f5d3a;
+    -webkit-text-stroke: 0;
+    text-decoration: none;
+  }
+  details.detail > summary:focus-visible { outline: 2px solid #a9b3a6; outline-offset: 3px; }
+  /* padding instead of a margin so the gap under the title is the same in every browser's details layout */
+  .detail-body { padding-top: 9px; }
+  .detail-body > p:first-child { margin-top: 0; }
+  #features .detail-body p.aside { font-style: italic; color: #5d6f62; }
+
+  /* decorative bands: centered, width as a percent of the page column */
+  .w { display: block; height: auto; margin: 16px auto; }
+  .w-nav   { width: 99.5%; margin-top: -20px; }
+  .w-bench { width: 40%; }
+  /* wide divider: 99% of the page column, centered by the .w auto margins */
+  .w-wide  { width: 100%; }
+  /* recolor to the page green (filter defined in the svg at the top of the body) */
+  .w-green { filter: url(#green); }
+  /* toned-down colors: 1 = original, 0 = grayscale */
+  .w-muted { opacity: 0.80; }
+
+  /* drop cap: the box is shorter than two lines of text, so only two lines wrap beside it */
+  .about p:first-of-type::first-letter {
+    float: left;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 52px;
+    line-height: 40px;
+    padding: 1px 6px 0 0;
+    color: #2f5d3a;
+  }
+
+  .frame {
+    border: 4px solid;
+    border-color: #a9b3a6 #6f7a6c #6f7a6c #a9b3a6;
+    background: #fff;
+    overflow-x: auto;
+    margin: 6px 0 10px 0;
+  }
+  table.bench {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+  }
+  table.bench th, table.bench td {
+    border: 1px solid #d5ddd1;
+    padding: 2px 6px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.bench th { background: #e3ebdf; color: #2f5d3a; }
+  table.bench td.l, table.bench th.l { text-align: left; }
+  table.bench th.l { width: 150px; }
+  /* the two label columns (OS cache, Tool cache): left-aligned and narrow.
+     The headers may wrap onto two lines ("Tool" / "cache"), so the cells ("warm", "off")
+     set the width instead of the header text */
+  table.bench th.lab, table.bench td.lab { text-align: left; width: 44px; }
+  table.bench th.lab { white-space: normal; }
+  /* one pale tint per mode; winner cells keep their inline green shading, which overrides these */
+  /* almost monochrome: warm rows lean a whisker yellow, cold rows a whisker cyan-green, both near the page's green-gray */
+  table.bench tr.s0 td { background: #f8f9f1; }  /* warm, tool cache on  */
+  table.bench tr.s1 td { background: #f2f4e8; }  /* warm, tool cache off */
+  table.bench tr.s2 td { background: #e4eff0; }  /* cold, tool cache off */
+  table.bench tr.s3 td { background: #eef6f6; }  /* cold, tool cache on  */
+  /* winner shading is set per cell by winStyle() in the script below */
+  table.bench td.best { font-weight: bold; }
+  /* one header row per tree and pattern; long patterns wrap inside it */
+  table.bench tr.grp td {
+    background: #eef3ea;
+    color: #2f5d3a;
+    font-weight: bold;
+    text-align: left;
+    white-space: normal;
+    word-break: break-all;
+    border-top: 2px solid #8fa68a;
+  }
+  table.bench .pat { font-weight: normal; color: #26332a; background: #fff; border: 1px solid #d5ddd1; padding: 0 3px; }
+  /* two-column spec sheet: left-aligned, long values wrap instead of scrolling */
+  table.bench.spec td { text-align: left; white-space: normal; vertical-align: top; }
+  table.bench.spec td.k { white-space: nowrap; width: 110px; background: #e3ebdf; color: #2f5d3a; font-weight: bold; }
+
+  /* small notes: same face and size as the Design and Features text, so only the muted color sets them apart */
+  .small { font-family: Georgia, "Times New Roman", serif; font-size: 15px; color: #5d6f62; }
+  code { font-family: "Courier New", Courier, monospace; font-size: 13px; }
+  pre {
+    background: #f1f4ee;
+    border: 1px solid #c5d1c0;
+    padding: 8px 10px;
+    overflow-x: auto;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    margin: 6px 0;
+  }
+  ul { margin: 6px 0; padding-left: 22px; list-style-type: "❧  "; }
+
+  /* Section spacing. flow-root keeps each section's inner margins from leaking out,
+     so the gap between two sections = upper one's bottom padding + lower one's top padding. */
+  #about, #bench, #design, #features, #usage, #links {
+    display: flow-root;
+    padding: var(--pt) 0 var(--pb);
+  }
+  #about > :last-child, #bench > :last-child, #design > :last-child,
+  #features > :last-child, #usage > :last-child, #links > :last-child,
+  #features .detail-body > p:last-child { margin-bottom: 0; }
+  #bench h2, #design h2, #usage h2, #links h2 { margin-top: 0; }
+
+  /* Design heading only: a notch bigger, and a hairline text stroke for "a little bolder".
+  Georgia has no in-between weight, so the stroke does the job, same trick as the folded Stale Pages Detector title */
+  #design h2 {
+    font-size: 40px;
+  }
+  #bench h2 {
+    font-size: 42px;
+  }
+
+  /* The gap between two sections = the upper one's --pb + the lower one's --pt.
+     Resulting gaps in px (original in brackets):
+     About>Benchmarks 7 (12), Benchmarks>Design 20 (10), Design>Features 26 (15),
+     Features>Usage 11 (15), Usage>Links 14 (14), Links>eagle band 10 (16) */
+  #about    { --pt: 0;    --pb: 6px;  }
+  #bench    { --pt: 1px;  --pb: 2px;  }  /* a little less, top and bottom */
+  #design   { --pt: 18px; --pb: 18px; }  /* much more, top and bottom */
+  #features { --pt: 8px;  --pb: 6px;  }
+  #usage    { --pt: 5px;  --pb: 4px;  }  /* a tiny bit less */
+  #links    { --pt: 10px; --pb: 6px; }  /* a tiny bit more on top, a little less below */
+  /* the eagle band is the last thing on the page, so its bottom margin only adds to the page padding: 4px + 22px instead of 16px + 22px */
+  #links + .w { margin-top: 12px; margin-bottom: 4px; }
+
+  /* h2 pulls up with a negative bottom margin (-10px) that the next block's top margin absorbs: paragraphs have 14px,
+     these two need their own. 30px - 10px leaves a 20px gap under the Usage and Links headings */
+  #usage h2 + pre, #links ul { margin-top: 30px; }
+  /* Benchmarks and Design: 22px - 10px leaves a 12px gap under the heading */
+  #bench h2 + p, #design h2 + p { margin-top: 22px; }
+  .foot { text-align: center; margin-top: 1px; }
+
+  /* clickable headings: the script below wraps each heading's text in a link to its own #fragment.
+     The link looks like the plain heading; a faint # appears on hover or keyboard focus */
+  a.anchor { color: inherit; font-weight: inherit; }
+  h2 a.anchor:hover, h3 a.anchor:hover { background: none; text-decoration: none; }
+  a.anchor::after { content: " #"; font-size: 0.6em; opacity: 0; transition: opacity .15s; }
+  a.anchor:hover::after, a.anchor:focus-visible::after { opacity: 0.45; }
+  h2, h3 { scroll-margin-top: 12px; }
+
+  @media (max-width: 560px) {
+    table.bench th, table.bench td { padding: 2px 4px; }
+    #page { --pad: 14px; padding: 14px var(--pad) 18px var(--pad); }
+    h1 { font-size: 54px; }
+  }
+</style>
+</head>
+<body>
+<!-- turns an image into flat page green (#2f5d3a), keeping its shape -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="green" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0 0 0 0 0.184  0 0 0 0 0.365  0 0 0 0 0.227  0 0 0 1 0"/>
+  </filter>
+</svg>
+<div id="page">
+
+  <div class="title">
+    <h1 id="top">rawgrep</h1>
+    <p class="tag">The fastest grep in the world</p>
+  </div>
+  <p class="nav">[ <a href="#about">about</a> | <a href="#bench">benchmarks</a> | <a href="#design">design</a> | <a href="#features">features</a> | <a href="#usage">usage</a> | <a href="#links">links</a> ]</p>
+  <img class="w w-nav" src="assets/garland.webp" alt="">
+
+  <div class="about" id="about">
+    <h2>About</h2>
+    <p>
+      Welcome to the rawgrep homepage. rawgrep began as a performance experiment but ended up being a genuinely nice tool to use. Primarily, its philosophy is to delete unnecessary work and simplify the problem space.
+    </p>
+    <p>
+      Mainstream greps are higher-level programs and largely work against this, since they stand on top of the operating system’s general-purpose file layers, such as the Virtual File System (VFS). rawgrep avoids the kernel wherever it can. It reads data straight from the block device, and its own highly specialized caches take the place of the kernel’s inode and dentry ones.
+    </p>
+    <p class="small">
+      Supported platforms: currently only ext4 (on Linux).
+    </p>
+  </div>
+
+  <div id="bench">
+    <h2>Benchmarks</h2>
+    <p class="small">
+      Mean wall time. 75 warm runs after 5 warmup runs, and 15 cold runs, with OS cache dropped before each.
+    </p>
+    <p class="small">
+      <em>Tool cache</em> is each tool's own persistent cache. For rawgrep it is the Fragment Cache,
+      for fff it is its LMDB frecency scoring.
+      ripgrep has no persistent cache, so its two rows per cache state are just repeat runs.
+    </p>
+
+    <noscript><p>Enable JavaScript to see the benchmark tables.</p></noscript>
+
+    <h3>Wall time, in milliseconds</h3>
+    <div class="frame"><table class="bench" id="wall"></table></div>
+
+    <h3>Peak Resident Set Size (RSS), in MiB</h3>
+    <div class="frame"><table class="bench" id="mem"></table></div>
+
+    <p>
+      <strong>rawgrep won 12 of the 16 scenarios</strong>. With warm OS cache and the Fragment Cache on, it is
+      2.4× to 3.5× faster than fff and 3.9× to 6.2× faster than ripgrep. With cold OS cache and the Fragment Cache
+      off, rawgrep’s lead over fff shrinks to 1.06× to 1.18×.
+    </p>
+    <p>
+      Of the four losses, three are to fff (cold OS cache, Fragment Cache on), by 1.05× to 2.2×. That is expected, since
+      fff relies on much heavier caching (see <a href="#design">Design</a>). The fourth is to ripgrep on the
+      Linux regex pattern (warm OS cache, Fragment Cache off), by under 10 ms. rawgrep will likely win this one too
+      in a future patch...
+    </p>
+    <p>
+      On memory, rawgrep uses 11% to 26% less than ripgrep on the Chromium tree, but 152% to 218% more on the
+      Linux tree, though its peak never exceeds 40 MiB. fff’s peak RSS is not in the table, since nearly all of it lives in the
+      long-running fff[d] process, not the benchmarked fff[q] client. On the Chromium corpus, fff[d] sits at about 250 MB
+      after indexing and climbs to 2.43 GB during search, where it stays, even when idle. Although, I should add that <a href="https://github.com/rakivo/fff-grep">fff-grep</a>
+      configures <a href="https://docs.rs/crate/fff-search/latest">fff-search</a> with an unlimited memory budget, so that it runs as fast as it possibly can.
+    </p>
+    <p>
+      Also, even with <code>--no-cache</code>, fff[d]’s <code>SharedFilePicker</code> still indexes the existing
+      files, and from what I've seen, that indexing cannot really be turned off. This likely explains why fff is faster than ripgrep in
+      six of the eight runs with the <em>Tool cache</em> off.
+    </p>
+
+    <h3>System information</h3>
+    <div class="frame">
+      <table class="bench spec">
+        <tr><td class="k">Kernel</td><td>Linux 6.12.57+deb13-amd64</td></tr>
+        <tr><td class="k">CPU</td><td>13th Gen Intel(R) Core(TM) i5-13400F, 16 threads</td></tr>
+        <tr><td class="k">Hardware</td><td>DDR4 3200 MHz, NVMe SSD (Crucial P2 250 GB, ~994 MB/s read / 736 MB/s write)</td></tr>
+        <tr><td class="k">Memory</td><td>15Gi total, 4.5Gi used, 7.9Gi page cache, 10Gi available; swap 12Gi total, 0B used</td></tr>
+        <tr><td class="k">Disk</td><td>nvme0n1 (benchmarking on partition /dev/nvme0n1p2)</td></tr>
+        <tr><td class="k">Model</td><td>CT250P2SSD8</td></tr>
+        <tr><td class="k">Capacity</td><td>232.9G, nvme, ssd</td></tr>
+        <tr><td class="k">Firmware</td><td>P2CR048</td></tr>
+        <tr><td class="k">Filesystem</td><td>ext4 on / (rw,relatime,errors=remount-ro)</td></tr>
+        <tr><td class="k">Block size</td><td>512 B logical, 512 B physical</td></tr>
+        <tr><td class="k">IO</td><td>scheduler [none] mq-deadline, read-ahead 128 KB, queue depth 1023</td></tr>
+        <tr><td class="k">PCIe link</td><td>8.0 GT/s PCIe x4 (max 8.0 GT/s PCIe x4)</td></tr>
+        <tr><td class="k">Data</td><td>../chromium on /dev/nvme0n1p2<br>../linux on /dev/nvme0n1p2</td></tr>
+        <tr><td class="k">rawgrep</td><td>0.3.0 (rev 4b9d579) 14 October 2026, 00:19:09</td></tr>
+        <tr><td class="k">ripgrep</td><td>15.2.0 (rev 3fce3b5bb0)</td></tr>
+        <tr><td class="k">fff</td><td>1.0.0 (fff_search 0.11.0) the CLI version used, is available at <a href="https://github.com/rakivo/fff-grep">rakivo/fff-grep</a></td></tr>
+        <tr><td class="k">hyperfine</td><td>2.0.0</td></tr>
+        <tr><td class="k">Linux tree</td><td>7.3.0-rc1, built with <code>make defconfig && make run</code></td></tr>
+        <tr><td class="k">Flags</td><td>
+              rawgrep: <code>--jump --color never -n --reserved-tool-dirs --large --threads 16 --no-ignore</code>, plus <code>--no-cache</code> in the no-cache runs<br>
+            <p>
+              ripgrep: <code>--vimgrep --color never -n --no-heading --threads 16 --no-ignore --no-column</code><br>
+            </p>
+            fff[q]: no extra flags
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="design">
+    <h2>Design</h2>
+    <p>
+      Tools like fff, Zoekt, ugrep, Google’s codesearch and others keep their own persistent caches, and those
+      caches are large: <strong>often tens of times the size</strong> of rawgrep’s, and
+      <strong>tens to hundreds of times as slow to prepare</strong>. That space is paid for on disk,
+      and paid for again in RAM, because their pages usually tend to stay resident. Some of them, for instance fff,
+      also demand a background file watcher, that also keeps the persistent cache always in RAM. <strong>By design</strong>,
+      rawgrep has no file watcher. <strong>By design</strong>, rawgrep is a one-shot program.
+      <strong>By design</strong>, Rawgrep’s caches are kept as light as they can be kept, while still providing the most performance benefit. Here is
+      everything rawgrep stores inside <code>~/.cache/rawgrep/</code> after the benchmarks above, not counting a few empty lock files:
+    </p>
+    <div class="frame">
+      <table class="bench">
+        <tr><th class="l">File</th><th>Chromium (~500k files)</th><th>Linux (~100k files)</th></tr>
+        <tr><td class="l">fragment-cache-*.bin</td><td>11 MiB</td><td>2.4 MiB</td></tr>
+        <tr><td class="l">dir-snapshot-*.bin</td><td>8.0 MiB</td><td>1.1 MiB</td></tr>
+        <tr><td class="l">binary-verdicts.bin</td><td>28 KiB</td><td>2.3 KiB</td></tr>
+        <tr><td class="l"><strong>Total</strong></td><td><strong>19 MiB</strong></td><td><strong>3.5 MiB</strong></td></tr>
+      </table>
+    </div>
+    <p>
+      rawgrep has no subcommand for preparing its caches, and <strong>by design</strong> it never will. It is fast enough to build them in passing, as a side effect of searching. Every run updates the caches automatically, but only when an update is actually necessary. The very first write, starting from no caches at all, happens after all the searching is done and all the matches are printed, and with warm OS cache it stays well under 100 ms of wall time, even on the Chromium corpus.
+    </p>
+    <p>
+      Each of these caches, and the rest of rawgrep’s machinery, is explained below.
+    </p>
+  </div>
+
+  <div id="features">
+    <h2>Features</h2>
+
+    <h3 class="feature">Fragment Cache</h3>
+    <p>
+      The Fragment Cache is a rather small and heavily tuned cache, and it exists to answer one question as cheaply as possible: given this pattern, can a file be skipped without being read at all? It
+      is inspired by the fragment-based filtering of <a href="https://github.com/asbott/nowgrep">nowgrep</a>
+      and works much like a Bloom filter with explicit tracking.
+    </p>
+    <p>
+      A fragment is a small sliding window of 3 or 4 bytes taken from the pattern and hashed.
+      Searching for <code>ERROR:</code> produces three of them:
+    </p>
+<pre>ERRO
+ RROR
+  ROR:</pre>
+    <p>
+      For every file, rawgrep keeps a compact bitset of the fragments it has seen. A later search
+      can then rule a file out the moment one of the fragments it needs is known to be absent.
+      Because the cache is built from <strong>fragments</strong> rather than whole patterns, even a different pattern
+      profits from earlier searches whenever the two share fragments.
+    </p>
+
+    <h3 class="feature">Literal Extractor</h3>
+    <p>
+      Real patterns are rarely plain strings. The Literal Extractor digs the literal text out of
+      more sophisticated kinds of patterns, such as regular expressions and alternations, and works in
+      conjunction with the Fragment Cache, so that even a pattern that looks hopelessly dynamic
+      can be filtered by the literals hiding inside it.
+    </p>
+
+    <h3 class="feature">Binary Verdicts cache</h3>
+    <p>
+      Binary files rarely deserve a search. Between runs, rawgrep accumulates what it learns about each file, from probing its contents to looking at its name and extension, and collects it into the Binary Verdicts cache. On the next run it already knows which files to skip, unless you pass
+      <code>--binary</code>, which would force rawgrep to skip this cache.
+    </p>
+
+    <h3 class="feature">Directory Snapshot cache</h3>
+    <p>
+      The Directory Snapshot Cache follows naturally from rawgrep being a raw partition scanner.
+      Bypassing the VFS also means bypassing the kernel’s directory cache, so every directory would
+      otherwise be decoded from its on-disk structures on every run. Internally, in rawgrep, a directory entry is packed down
+      to just 12 bytes, so for directories that have not changed, rawgrep skips that decoding: it packs
+      their entries into the Directory Cache. A snapshot is trusted only while the
+      directory’s <code>mtime</code> and <code>ctime</code> still match and, following the
+      <a href="https://git-scm.com/docs/racy-git">racy-git</a> rule, only if both are older than the
+      moment the snapshot was written.
+    </p>
+
+    <h3 class="feature">Disk Warmness Checker</h3>
+    <p>
+      A cold run and a warm run are different problems. The Disk Warmness Checker inspects which virtual memory pages are resident and adapts the hinting algorithms accordingly.
+    </p>
+
+    <details class="detail">
+      <summary><h3 class="feature">Stale Pages Detector</h3></summary>
+      <div class="detail-body">
+        <p class="aside">
+          This isn’t really a feature, but it’s quite an interesting detail.
+        </p>
+        <p>
+          Reading the block device directly brings a problem that conventional greps never meet: the
+          device has a page cache of its own, separate from the per-file one. When a file is edited,
+          writeback goes around that cache, so blocks cached before the edit stay stale until they are
+          dropped. Calling <code>sync()</code> does not help, and dropping the whole device cache on
+          every run would make every run cold.
+        </p>
+        <p>
+          So rawgrep drops only what can actually be stale: the pages of files whose
+          <code>ctime</code> shows they changed since the last boot. A tiny memo file records which of those files’
+          pages it has already dropped and re-read, so it does not drop them again on every run, and files
+          that have not been written to stay warm.
+        </p>
+      </div>
+    </details>
+  </div>
+
+  <div id="usage">
+    <h2>Usage</h2>
+<pre>$ rawgrep TODO
+$ rawgrep '[A-Z]+_SUSPEND' ../linux</pre>
+    <h3>Permissions</h3>
+    <p>
+      rawgrep reads raw block devices such as <code>/dev/sda1</code>, which the OS protects.
+      Instead of running it under <code>sudo</code> every time, you grant the binary a single Linux
+      capability, <code>CAP_DAC_READ_SEARCH</code>, which does exactly one thing: it bypasses file
+      read permission checks. rawgrep only reads from the block device and never writes to it.
+    </p>
+<pre>$ sudo setcap cap_dac_read_search=eip ./rawgrep</pre>
+    <p>
+      To check what the binary has, or to revoke it and go back to <code>sudo</code>:
+    </p>
+<pre>$ getcap ./rawgrep
+./rawgrep = cap_dac_read_search+eip
+
+$ sudo setcap -r ./rawgrep</pre>
+    <p>
+      Capabilities are tied to the binary file itself, so run <code>setcap</code> again whenever
+      you replace it with a new download. rawgrep deliberately ships no script that runs
+      <code>sudo</code> for you: the command is a single line, and you should see exactly what it
+      does.
+    </p>
+
+    <h3>Going further ...</h3>
+    <p>
+      You can skip this step. rawgrep keeps its on-disk Fragment Cache <code>mlock</code>ed in
+      memory once it is mapped, so a large scan under memory pressure cannot evict it. Locking
+      memory is possible without any permissions, but only a small amount, which is not enough for
+      the caches, even on the Linux corpus. Locking all of it requires root or the
+      <code>cap_ipc_lock</code> capability. Without that, rawgrep still works fine and falls back
+      to a best-effort strategy that is usually just as fast, but can occasionally be slower on a
+      cold cache under heavy concurrent memory pressure. To grant both capabilities in one
+      command, use this instead of the one above:
+    </p>
+<pre>$ sudo setcap 'cap_dac_read_search,cap_ipc_lock=eip' ./rawgrep</pre>
+  </div>
+
+  <div id="links">
+    <h2>Links</h2>
+    <ul>
+      <li><a href="https://github.com/rakivo/rawgrep/releases">Releases</a></li>
+      <li><a href="https://github.com/rakivo/rawgrep/issues">Issues</a></li>
+      <li>Email: <a href="mailto:marktyrkba456@gmail.com">marktyrkba456@gmail.com</a></li>
+    </ul>
+  </div>
+
+  <img class="w w-wide w-muted" src="assets/eagle-band.webp" alt="">
+
+</div>
+
+<script>
+// ---- benchmark tables ----
+// Flat data, no objects, no classes. The long patterns live here once and rows point at them.
+var TREE = ["Chromium (~500k files)", "Linux (~100k files)"];
+var PATTERN = [
+  "TODO",
+  "(?i)\\bTODO\\((?:crbug\\.com/\\d+|[a-zA-Z][\\w.-]*)\\)",
+  "[A-Z]+_SUSPEND"
+];
+// The four modes, in row order. OSC = state of the OS cache, TC = state of the tool's own cache
+// (rawgrep's Fragment Cache). Each mode also gets its own row tint, see tr.s0 .. tr.s3 in the CSS.
+var OSC = ["warm", "warm", "cold", "cold"];
+var TC  = ["on",   "off",  "off",  "on"];
+
+// A group is a tree and a pattern. Rows are listed group by group.
+var GROUP_TREE = [0, 0, 1, 1];
+var GROUP_PAT  = [0, 1, 0, 2];
+
+// Row layout: group, scen, wallRawgrep, wallFff, wallRipgrep, memRawgrep, memRipgrep
+var ROWS = [
+  [0,0,    67.4,   173.1,   345.9,   64.6,  85.4],
+  [0,1,   218.3,   301.5,   346.3,   67.1,  85.4],
+  [0,2,  8558.4, 10004.1, 11890.0,   60.6,  79.3],
+  [0,3,  1545.7,  1590.2, 11950.1,   58.4,  79.3],
+  [1,0,    57.2,   137.7,   356.2,   63.9,  81.1],
+  [1,1,   221.5,   333.9,   357.3,   70.9,  81.1],
+  [1,2,  8564.3, 10087.2, 11887.8,   66.2,  74.2],
+  [1,3,  1213.8,   553.0, 11903.3,   60.2,  74.2],
+  [2,0,    20.2,    70.9,   109.0,   33.6,  11.5],
+  [2,1,   107.9,   111.2,   109.3,   30.8,  11.5],
+  [2,2,  3092.7,  3296.9,  3720.7,   29.7,  11.8],
+  [2,3,   332.7,   318.2,  3814.5,   33.7,  11.8],
+  [3,0,    28.2,    69.1,   109.5,   37.8,  11.9],
+  [3,1,   118.8,   111.5,   109.9,   33.8,  11.9],
+  [3,2,  3138.5,  3328.3,  3702.5,   33.7,  11.9],
+  [3,3,   355.6,   275.3,  3742.1,   37.9,  11.9]
+];
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Win color: pale green for a narrow win, deep green for a crushing one.
+// A win's "lead" is how many times faster (or smaller) the winner is than the runner-up in its row.
+// Each table is shaded on its own, and WIN_MODE decides how its leads turn into shades:
+//   "range": the smallest lead in the table gets the palest green and the biggest lead the deepest,
+//            with the leads in between spread on a log scale
+//   "rank":  the leads are ranked and the shades are spread evenly along the ranking,
+//            so the whole palette gets used even when most leads are small
+//   "fixed": the old fixed scale, palest at 1.0x and deepest at WIN_CAP
+var WIN_MODE = "rank";
+var WIN_LO  = [229, 237, 223];  // palest green
+var WIN_HI  = [ 53,  89,  61];  // deepest green
+var WIN_CAP = 3;                // "fixed" mode only: the lead at which the color saturates
+var WHITE_BIAS = 2.2;          // above 1 switches to white text sooner; 1 = whichever color has the better contrast
+
+// leads: one per winning row. Returns a position from 0 (palest) to 1 (deepest) for each of them.
+function shades(leads) {
+  var n = leads.length, lg = [], t = [], i;
+  for (i = 0; i < n; i++) lg.push(Math.log(leads[i]));
+
+  if (WIN_MODE == "fixed") {
+    for (i = 0; i < n; i++) t.push(lg[i] / Math.log(WIN_CAP));
+  } else if (WIN_MODE == "rank") {
+    var sorted = lg.slice().sort(function (a, b) { return a - b; });
+    for (i = 0; i < n; i++) t.push(n > 1 ? sorted.indexOf(lg[i]) / (n - 1) : 1);
+  } else {
+    var lo = Math.min.apply(null, lg), hi = Math.max.apply(null, lg);
+    for (i = 0; i < n; i++) t.push(hi > lo ? (lg[i] - lo) / (hi - lo) : 1);
+  }
+
+  for (i = 0; i < n; i++) t[i] = Math.max(0, Math.min(1, t[i]));
+  return t;
+}
+
+// t: 0 = palest green, 1 = deepest green
+function winStyle(t) {
+  var rgb = [], i;
+  for (i = 0; i < 3; i++) rgb.push(Math.round(WIN_LO[i] + (WIN_HI[i] - WIN_LO[i]) * t));
+  // pick whichever text color (white or near-black) has the better WCAG contrast on this background
+  var lin = function (c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  var L = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+  var onWhite = 1.05 / (L + 0.05);           // contrast with #fff
+  var onDark  = (L + 0.05) / (0.0087 + 0.05); // contrast with #101a13
+  return "background:rgb(" + rgb.join(",") + ");color:" + (onWhite * WHITE_BIAS > onDark ? "#fff" : "#101a13");
+}
+
+// Render one table. first = index of first value column in a row,
+// n = number of value columns, heads = column titles.
+function render(id, first, n, heads) {
+  // first pass: the best value, and its lead over the runner-up, in every row
+  var best = [], lead = [];
+  var r, c;
+  for (r = 0; r < ROWS.length; r++) {
+    var b = Infinity, s = Infinity;
+    for (c = 0; c < n; c++) {
+      var x = ROWS[r][first + c];
+      if (x < b) { s = b; b = x; }
+      else if (x < s) { s = x; }
+    }
+    best.push(b);
+    lead.push(s / b);
+  }
+  var shade = shades(lead);
+
+  var out = ["<tr><th class=\"lab\">OS cache</th><th class=\"lab\">Tool cache</th>"];
+  var h;
+  for (h = 0; h < n; h++) out.push("<th>" + heads[h] + "</th>");
+  out.push("</tr>");
+
+  var last = -1;
+  for (r = 0; r < ROWS.length; r++) {
+    var row = ROWS[r];
+    var g = row[0];
+    if (g != last) {
+      out.push("<tr class=\"grp\"><td colspan=\"" + (n + 2) + "\">" + TREE[GROUP_TREE[g]] +
+               ", pattern: <span class=\"pat\">" + esc(PATTERN[GROUP_PAT[g]]) + "</span></td></tr>");
+      last = g;
+    }
+
+    out.push("<tr class=\"s" + row[1] + "\"><td class=\"lab\">" + OSC[row[1]] +
+             "</td><td class=\"lab\">" + TC[row[1]] + "</td>");
+    for (c = 0; c < n; c++) {
+      var v = row[first + c];
+      if (v == best[r]) {
+        out.push("<td class=\"best\" style=\"" + winStyle(shade[r]) + "\" title=\"" +
+                 lead[r].toFixed(2) + "x ahead of runner-up\">" + v.toFixed(1) + "</td>");
+      } else {
+        out.push("<td>" + v.toFixed(1) + "</td>");
+      }
+    }
+    out.push("</tr>");
+  }
+  document.getElementById(id).innerHTML = out.join("");
+}
+
+render("wall", 2, 3, ["rawgrep", "fff", "ripgrep"]);
+render("mem",  5, 2, ["rawgrep", "ripgrep"]);
+
+// ---- clickable headings ----
+// Every h2 and h3 gets an id and its text becomes a link to that id, so a section can be shared by URL.
+// This runs after the tables are rendered so that a #fragment on load scrolls to the final layout.
+(function () {
+  function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+
+  var heads = document.querySelectorAll("#page h2, #page h3"), i;
+  for (i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    // h2s reuse their section's id (#about, #bench, ...) so they match the nav links
+    var sec = h.tagName == "H2" ? h.parentNode : null;
+    var id = (sec && sec.id) || h.id || slug(h.textContent);
+    if (!(sec && sec.id)) h.id = id;
+
+    // the Stale Pages Detector title sits inside <summary>; leave it as a plain toggle
+    if (h.closest("summary")) continue;
+
+    var a = document.createElement("a");
+    a.className = "anchor";
+    a.href = "#" + id;
+    while (h.firstChild) a.appendChild(h.firstChild);
+    h.appendChild(a);
+  }
+
+  // a link to the folded detail opens it
+  function openTarget(scroll) {
+    var t = null;
+    try { t = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1))); }
+    catch (e) {}
+    if (!t) return;
+    var d = t.closest("details");
+    if (d) d.open = true;
+    if (scroll) t.scrollIntoView();
+  }
+  openTarget(true);
+  window.addEventListener("hashchange", function () { openTarget(false); });
+
+  // opening the detail puts its link in the address bar, so it can be copied
+  var dets = document.querySelectorAll("details.detail");
+  for (i = 0; i < dets.length; i++) (function (d) {
+    d.addEventListener("toggle", function () {
+      if (d.open) history.replaceState(null, "", "#" + d.querySelector("h3").id);
+    });
+  })(dets[i]);
+})();
+</script>
+</body>
+</html>
