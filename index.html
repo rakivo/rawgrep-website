@@ -261,7 +261,11 @@
     table.bench th, table.bench td { padding: 2px 4px; }
     #page { --pad: 14px; padding: 14px var(--pad) 18px var(--pad); }
     h1 { font-size: 54px; }
-    /* on phones the nav wraps onto two lines, so the garland must not be pulled up under it */
+  }
+
+  /* below the full-width layout (the page column stops growing at about 970px) the garland shrinks with the page
+     but the -20px pull-up does not, so it covers more and more of the nav. Give it a small gap instead */
+  @media (max-width: 1000px) {
     .w-nav { margin-top: 10px; }
   }
 </style>
