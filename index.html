@@ -31,13 +31,16 @@
     padding: 18px var(--pad) 22px var(--pad);
   }
 
-  .title { text-align: center; }
+  .title { text-align: center; container-type: inline-size; }
   h1 {
     margin: 0;
     font-family: Georgia, "Times New Roman", serif;
     font-weight: 700;
     font-style: italic;
     font-size: 90px;
+    /* shrink with the column so the word never overflows it; 5 is a generous width-per-font-size estimate for 7 letters of bold italic serif.
+       The line above is the fallback for browsers without container query units */
+    font-size: clamp(40px, calc((100cqw - 60px) / 5), 90px);
     line-height: 1.05;
     letter-spacing: 1px;
     padding: 27px;
@@ -52,7 +55,9 @@
       font-style: italic;
   }
   /* position + z-index lift the links above the garland, which is pulled up under them by a negative margin */
-  .nav { margin: 10px 0 0 0; font-size: 13px; text-align: center; position: relative; z-index: 1; }
+  .nav { margin: 10px 0 0 0; font-size: 12px; text-align: center; position: relative; z-index: 1;
+         /* when the links wrap, spread them evenly over the lines; the &nbsp; in the markup glues each bracket and | to its neighbour */
+         text-wrap: balance; }
   h2 {
     margin: 0 0 -10px 0;
     font-family: Georgia, "Times New Roman", serif;
@@ -260,7 +265,6 @@
   @media (max-width: 560px) {
     table.bench th, table.bench td { padding: 2px 4px; }
     #page { --pad: 14px; padding: 14px var(--pad) 18px var(--pad); }
-    h1 { font-size: 54px; }
   }
 
   /* below the full-width layout (the page column stops growing at about 970px) the garland shrinks with the page
@@ -283,7 +287,7 @@
     <h1 id="top">rawgrep</h1>
     <p class="tag">The fastest grep in the world</p>
   </div>
-  <p class="nav">[ <a href="#about">about</a> | <a href="#bench">benchmarks</a> | <a href="#design">design</a> | <a href="#features">features</a> | <a href="#usage">usage</a> | <a href="#links">links</a> ]</p>
+  <p class="nav">[&nbsp;<a href="#about">about</a>&nbsp;| <a href="#bench">benchmarks</a>&nbsp;| <a href="#design">design</a>&nbsp;| <a href="#features">features</a>&nbsp;| <a href="#usage">usage</a>&nbsp;| <a href="#links">links</a>&nbsp;]</p>
   <img class="w w-nav" src="assets/garland.webp" alt="">
 
   <div class="about" id="about">
