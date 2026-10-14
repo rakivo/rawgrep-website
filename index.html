@@ -14,6 +14,11 @@
     font-size: 14px;
     line-height: 1.55;
   }
+  /* render everything at 125%, like a browser zoom of 125%: text, padding, borders, images and the page column's max-width all scale together.
+   Skipped on narrow screens, where the 560px breakpoint below already shrinks the layout for phones */
+  @media (min-width: 561px) {
+      body { zoom: 1.25; }
+  }
   a { color: #2f6b45; text-decoration: none; font-weight: 550; }
   a:hover { background: #dbe8d4; text-decoration: underline; }
 
