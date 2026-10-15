@@ -490,7 +490,8 @@
  RROR
   ROR:</pre>
     <p>
-      For every file, rawgrep keeps a compact bitset of the fragments it has seen. A later search
+      For every file, rawgrep keeps a compact bitset of the fragments it has seen, that is trusted only while the
+      file's <code>ctime</code> is unchanged. A later search
       can then rule a file out the moment one of the fragments it needs is known to be absent.
       Because the cache is built from <strong>fragments</strong> rather than whole patterns, even a different pattern
       profits from earlier searches whenever the two share fragments.
@@ -507,7 +508,7 @@
     <h3 class="feature" id="binary-verdicts-cache"><a class="anchor" href="#binary-verdicts-cache">Binary Verdicts cache</a></h3>
     <p>
       Binary files rarely deserve a search. Between runs, rawgrep accumulates what it learns about each file, from probing its contents to looking at its name and extension, and collects it into the Binary Verdicts cache. On the next run it already knows which files to skip, unless you pass
-      <code>--binary</code>, which would force rawgrep to skip this cache.
+      <code>--binary</code>, which would force rawgrep to skip this cache. Binary Verdicts are likewise keyed on <code>ctime</code>.
     </p>
 
     <h3 class="feature" id="directory-snapshot-cache"><a class="anchor" href="#directory-snapshot-cache">Directory Snapshot cache</a></h3>
@@ -571,9 +572,9 @@ $ rawgrep '[A-Z]+_SUSPEND' ../linux</pre>
       rawgrep reads raw block devices such as <code>/dev/sda1</code>, which the OS protects.
       Instead of running it under <code>sudo</code> every time, you grant the binary a single Linux
       capability, <code>CAP_DAC_READ_SEARCH</code>, which does exactly one thing: it bypasses file
-      read permission checks. rawgrep only reads from the block device and never writes to it.
+      read permission checks, so any user who can run the binary can read any file on the partition.
     </p>
-<pre>$ sudo setcap cap_dac_read_search=eip ./rawgrep</pre>
+    <pre>$ sudo setcap cap_dac_read_search=eip ./rawgrep</pre>
     <p>
       To check what the binary has, or to revoke it and go back to <code>sudo</code>:
     </p>
